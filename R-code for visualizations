@@ -1,0 +1,176 @@
+**Special Effects Era Impact**
+  tech_milestones <- data.frame(
+    year = c(1977, 1982, 1993, 1999, 2009),
+    event = c("Star Wars", "TRON", "Jurassic Park", "The Matrix", "Avatar"),
+    y = c(7, 7, 7, 7, 7)
+  )
+  
+  rating_trends <- data %>%
+    separate_rows(genres, sep = ",") %>%
+    filter(genres %in% c("Sci-Fi", "Action", "Drama", "Western")) %>%
+    group_by(startYear, genres) %>%
+    summarise(
+      avg_rating = mean(averageRating),
+      movie_count = n()
+    ) %>%
+    ggplot(aes(x = startYear, y = avg_rating, color = genres, size = movie_count)) +
+    geom_point(alpha = 0.3) +
+    geom_smooth(method = "loess", se = FALSE) +
+    geom_vline(data = tech_milestones, aes(xintercept = year), 
+               linetype = "dashed", alpha = 0.5) +
+    geom_text(data = tech_milestones, aes(x = year, y = y, label = event),
+              angle = 90, vjust = -0.5, size = 3, color = "black") +
+    scale_size_continuous(range = c(0.5, 3)) +
+    theme_minimal() +
+    labs(title = "Genre Ratings and Major VFX Milestones",
+         x = "Year",
+         y = "Average Rating",
+         color = "Genre",
+         size = "Number of Movies")
+
+**Western Decline Details**
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(gridExtra)
+data <- read.csv(file.choose())
+western_decline <- data %>%
+    separate_rows(genres, sep = ",") %>%
+    filter(genres == "Western") %>%
+    # Create decade labels more explicitly
+    mutate(
+      decade = paste0(floor(startYear/10) * 10, "s")  # This turns 1950 into "1950s"
+    ) %>%
+    group_by(decade) %>%
+    summarise(
+      `Number of Movies` = n(),
+      `Average Rating` = round(mean(averageRating), 2),
+      `Total Audience Votes` = sum(numVotes)/1000
+    ) %>%
+    gather(metric, value, -decade) %>%
+    ggplot(aes(x = decade, y = value)) +
+    geom_col(fill = "seagreen") +
+    facet_wrap(~metric, scales = "free_y", nrow = 3) +
+    theme_minimal() +
+    theme(
+      strip.text = element_text(size = 11, face = "bold"),
+      axis.title.y = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1)  # Angled labels for better readability
+    ) +
+    labs(
+      title = "Western Genre Decline Analysis by Decade",
+      subtitle = "Showing number of movies, ratings, and audience engagement",
+      x = "Decade"
+    )
+print(western_decline)
+
+
+**Drama Genre Analysis**
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(gridExtra)
+
+data <- read.csv(file.choose())
+drama <- data %>%
+    separate_rows(genres, sep = ",") %>%
+    filter(genres == "Drama") %>%
+    mutate(decade = floor(startYear/10) * 10) %>%
+    group_by(decade) %>%
+    summarise(
+        movie_count = n(),
+        avg_rating = mean(averageRating),
+        total_votes = sum(numVotes)
+    ) %>%
+    gather(metric, value, -decade) %>%
+    ggplot(aes(x = decade, y = value)) +
+    geom_col(fill = genre_colors["Drama"]) +  
+    facet_wrap(~metric, scales = "free_y", nrow = 3) +
+    theme_minimal() +
+    labs(title = "Drama Genre Analysis by Decade",
+         x = "Decade",
+         y = "Value")
+
+print(drama)
+
+**Specifying genres for subsequent visualizations**
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(viridis)
+library(scales)
+
+# Define specific genres we want to analyze
+SELECTED_GENRES <- c("Sci-Fi", "Action", "Drama", "Western", 
+                    "Thriller", "Fantasy", "Musical")
+
+# Function to analyze imported data
+analyze_movie_genres <- function(data) {
+  # Filter for selected genres
+  movie_data <- data %>%
+    filter(genres %in% SELECTED_GENRES)
+  
+**Average Rating by Genre Over Time**
+  p1 <- ggplot(movie_data %>%
+               group_by(startYear, genres) %>%
+               summarise(avg_rating = mean(averageRating),
+                        count = n()), 
+               aes(x = startYear, y = avg_rating, color = genres)) +
+    geom_smooth(se = FALSE, span = 0.3) +
+    geom_point(alpha = 0.1, size = 0.5) +
+    theme_minimal() +
+    scale_color_viridis_d() +
+    labs(title = "Average Movie Ratings by Selected Genres",
+         subtitle = "Smoothed trend lines with confidence intervals",
+         x = "Year",
+         y = "Average Rating",
+         color = "Genre") +
+    theme(legend.position = "right",
+          plot.title = element_text(size = 14, face = "bold"),
+          axis.text = element_text(size = 10),
+          legend.text = element_text(size = 9))
+  
+**Rating Distribution by Genre**
+  p2 <- ggplot(movie_data, aes(x = genres, y = averageRating, fill = genres)) +
+    geom_boxplot(width = 0.1, alpha = 0.7) +
+    theme_minimal() +
+    scale_fill_viridis_d() +
+    labs(title = "Rating Distribution by Genre",
+         x = "Genre",
+         y = "Rating") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "none",
+          plot.title = element_text(size = 14, face = "bold"),
+          axis.text = element_text(size = 10))
+
+**Main execution code**
+# Import data
+data <- read.csv(file.choose())
+
+# Run analysis
+results <- analyze_movie_genres(data)
+
+# Display plots
+print(results$ratings_trend)
+print(results$rating_dist)
+
+
+**Heatmap of rating trends**
+data <- read.csv(file.choose())
+movies_data <- data
+
+rating_heatmap <- movies_data %>%
+  group_by(decade, primary_genre) %>%
+  summarize(mean_rating = mean(averageRating, na.rm = TRUE)) %>%
+  ggplot(aes(x = factor(decade), 
+             y = primary_genre, 
+             fill = mean_rating)) +
+  geom_tile() +
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Genre Ratings Heatmap",
+       x = "Decade", 
+       y = "Genre") +
+  theme_minimal()
