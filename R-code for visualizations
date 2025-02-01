@@ -1,3 +1,8 @@
+Code used for splitting the genres
+mutate(primary_genre = str_split(genres, ",") %>% map_chr(1)) %>%
+  count(primary_genre)
+
+
 Special Effects Era Impact
   tech_milestones <- data.frame(
     year = c(1977, 1982, 1993, 1999, 2009),
